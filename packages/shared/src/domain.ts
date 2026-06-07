@@ -51,3 +51,15 @@ export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number]
 
 /** Comision por defecto de la plataforma: 5% sobre el canon (doc. seccion 1). */
 export const DEFAULT_COMMISSION_RATE = 0.05
+
+// --- Notificaciones (Fase 1) ---
+export const CANALES_NOTIFICACION = ['email', 'whatsapp'] as const
+export type CanalNotificacion = (typeof CANALES_NOTIFICACION)[number]
+
+export const TIPOS_NOTIFICACION = [
+  'corte_proximo',
+  'liquidacion_emitida',
+  'pago_confirmado',
+  'extraccion_fallida',
+] as const
+export type TipoNotificacion = (typeof TIPOS_NOTIFICACION)[number]

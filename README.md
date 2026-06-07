@@ -1,6 +1,6 @@
 # ARRIENDA+
 
-Plataforma de gestión y recaudo de arriendos con servicios públicos (Colombia — Valle del Cauca).
+Plataforma de gestión y recaudo de arriendos con servicios públicos en **Colombia**.
 Tres roles · recaudo automático · comisión del 5% sobre el canon.
 
 > Documento de producto: [`ARRIENDA+ Concepto y Arquitectura.md`](./ARRIENDA+%20Concepto%20y%20Arquitectura.md)

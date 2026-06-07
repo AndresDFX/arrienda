@@ -37,7 +37,12 @@ function ArrendadorDashboard() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-10 px-6 py-10">
-      <h1 className="text-2xl font-bold">Panel del Arrendador</h1>
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight">Panel del Arrendador</h1>
+        <p className="text-muted-foreground mt-1">
+          Gestiona tus propiedades, contratos y liquidaciones.
+        </p>
+      </header>
       <PropiedadesSection arrendadorId={profile.id} />
       <ContratosSection />
       <ScraperTestCard />
@@ -159,7 +164,7 @@ function PropiedadesSection({ arrendadorId }: { arrendadorId: string }) {
   const qc = useQueryClient()
   const propiedades = useQuery({ queryKey: ['propiedades'], queryFn: listPropiedades })
   const [direccion, setDireccion] = useState('')
-  const [ciudad, setCiudad] = useState('Cali')
+  const [ciudad, setCiudad] = useState('')
   const [modalidad, setModalidad] = useState<ModalidadCobro>('completo')
 
   const crear = useMutation({

@@ -3,47 +3,65 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   ARRIENDA+ — Identidad de marca
+   Primario teal/esmeralda (confianza + hogar + dinero), acento ámbar.
+   ============================================================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.75rem;
+
+  --background: oklch(0.99 0.004 196);
+  --foreground: oklch(0.21 0.03 220);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.21 0.03 220);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --popover-foreground: oklch(0.21 0.03 220);
+
+  --primary: oklch(0.58 0.1 187);
+  --primary-foreground: oklch(0.99 0.01 187);
+  --secondary: oklch(0.96 0.014 196);
+  --secondary-foreground: oklch(0.3 0.03 210);
+  --muted: oklch(0.965 0.01 196);
+  --muted-foreground: oklch(0.53 0.022 215);
+  --accent: oklch(0.95 0.03 187);
+  --accent-foreground: oklch(0.32 0.05 200);
+  --destructive: oklch(0.58 0.22 27);
+
+  --border: oklch(0.92 0.012 215);
+  --input: oklch(0.92 0.012 215);
+  --ring: oklch(0.58 0.1 187);
+
+  /* Marca */
+  --brand: oklch(0.58 0.1 187);
+  --brand-2: oklch(0.66 0.13 168);
+  --brand-accent: oklch(0.81 0.15 78);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.17 0.022 224);
+  --foreground: oklch(0.97 0.008 196);
+  --card: oklch(0.21 0.026 222);
+  --card-foreground: oklch(0.97 0.008 196);
+  --popover: oklch(0.21 0.026 222);
+  --popover-foreground: oklch(0.97 0.008 196);
+
+  --primary: oklch(0.72 0.12 184);
+  --primary-foreground: oklch(0.18 0.03 220);
+  --secondary: oklch(0.27 0.03 222);
+  --secondary-foreground: oklch(0.97 0.008 196);
+  --muted: oklch(0.27 0.03 222);
+  --muted-foreground: oklch(0.72 0.025 210);
+  --accent: oklch(0.3 0.05 200);
+  --accent-foreground: oklch(0.97 0.008 196);
+  --destructive: oklch(0.7 0.19 22);
+
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
+  --ring: oklch(0.72 0.12 184);
+
+  --brand: oklch(0.72 0.12 184);
+  --brand-2: oklch(0.74 0.13 168);
+  --brand-accent: oklch(0.82 0.15 78);
 }
 
 @theme inline {
@@ -51,6 +69,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -69,6 +90,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-accent: var(--brand-accent);
 }
 
 @layer base {
@@ -79,5 +104,17 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+@utility brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand-2), var(--brand));
+}
+@utility text-brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand-2), var(--brand));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }

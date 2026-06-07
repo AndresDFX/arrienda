@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Logo } from '@/components/brand/logo'
 
 export const Route = createFileRoute('/signup')({ component: SignupPage })
 
@@ -33,10 +34,18 @@ function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-md items-center px-6">
-      <Card className="w-full">
+    <main className="relative flex min-h-[calc(100vh-57px)] items-center justify-center px-6 py-10">
+      <div
+        aria-hidden
+        className="brand-gradient absolute -top-28 left-1/2 size-[30rem] -translate-x-1/2 rounded-full opacity-10 blur-3xl"
+      />
+      <div className="relative w-full max-w-md">
+        <Link to="/" className="mx-auto mb-6 flex w-fit">
+          <Logo />
+        </Link>
+        <Card className="w-full">
         <CardHeader>
-          <CardTitle>Crear cuenta</CardTitle>
+          <CardTitle>Crea tu cuenta</CardTitle>
           <CardDescription>Registrate como arrendador o arrendatario</CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,7 +98,8 @@ function SignupPage() {
             </p>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </main>
   )
 }

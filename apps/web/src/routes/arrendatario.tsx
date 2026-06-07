@@ -7,8 +7,16 @@ import { useAuth } from '@/lib/auth'
 import { getTransaccion, listLiquidacionItems, listLiquidaciones } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/arrendatario')({ component: ArrendatarioDashboard })
+
+function estadoBadge(estado: string): 'success' | 'warning' | 'destructive' | 'secondary' {
+  if (estado === 'pagada') return 'success'
+  if (estado === 'vencida') return 'destructive'
+  if (estado === 'emitida') return 'warning'
+  return 'secondary'
+}
 
 function ArrendatarioDashboard() {
   const navigate = useNavigate()
@@ -84,13 +92,7 @@ function LiquidacionCard({
         <CardTitle className="text-base">
           Periodo {periodo} · {formatCOP(total)}
         </CardTitle>
-        <span
-          className={
-            estado === 'pagada' ? 'text-sm font-medium text-green-600' : 'text-muted-foreground text-sm'
-          }
-        >
-          {estado}
-        </span>
+        <Badge variant={estadoBadge(estado)}>{estado}</Badge>
       </CardHeader>
       <CardContent className="space-y-2">
         <ul className="text-sm">

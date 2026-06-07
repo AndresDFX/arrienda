@@ -32,7 +32,13 @@ services:
       - '3000:3000'
     volumes:
       - .:/app
+      # node_modules en volumenes anonimos: el contenedor (Linux) NO pisa los del
+      # host (Windows) en el bind-mount. Evita que `bun install` del contenedor
+      # rompa la resolucion en el host.
       - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/scraper/node_modules
+      - /app/packages/shared/node_modules
       # Sobrescribe los secretos de servidor con la version "docker" (host.docker.internal):
       - ./apps/web/.dev.vars.docker:/app/apps/web/.dev.vars:ro
     extra_hosts:
