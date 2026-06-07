@@ -1,0 +1,6 @@
+[install]
+# Usa el lockfile y resuelve workspaces de forma determinista
+exact = false
+
+[install.scopes]
+# (sin registries privados por ahora)

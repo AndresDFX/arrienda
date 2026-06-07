@@ -1,0 +1,23 @@
+{
+  "name": "@arrienda/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dominio compartido de ARRIENDA+: tipos, schemas Zod y logica de liquidacion/dispersion",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.4"
+  }
+}

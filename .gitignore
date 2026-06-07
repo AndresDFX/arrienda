@@ -1,0 +1,47 @@
+# Dependencias
+node_modules/
+.bun/
+
+# Builds
+dist/
+.output/
+.vinxi/
+.tanstack/
+build/
+**/routeTree.gen.ts
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# Supabase (artefactos locales)
+supabase/.temp/
+supabase/.branches/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Logs / cache
+*.log
+.scraper-logs/
+.cache/
+.vite/
+coverage/
+
+# Playwright
+apps/scraper/playwright-report/
+apps/scraper/test-results/
+apps/scraper/.auth/
+
+# Recon/scraping artifacts (screenshots, HTML con datos reales)
+.inspect/
+apps/scraper/.inspect/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

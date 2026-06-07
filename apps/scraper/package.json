@@ -1,0 +1,26 @@
+{
+  "name": "@arrienda/scraper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Motor de extraccion (RPA/Web Scraping) de ARRIENDA+ — Fase 1. Corre en Docker, NO en Cloudflare.",
+  "scripts": {
+    "dev": "node --experimental-strip-types --watch src/index.ts",
+    "start": "node --experimental-strip-types src/index.ts",
+    "once": "node --experimental-strip-types src/index.ts --once",
+    "inspect": "node --experimental-strip-types src/inspect.ts",
+    "extract": "node --experimental-strip-types src/extract.ts",
+    "test-extractor": "node --experimental-strip-types src/test-extractor.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@arrienda/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.103.3",
+    "playwright": "^1.60.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.16.5",
+    "typescript": "^5.8.3"
+  }
+}

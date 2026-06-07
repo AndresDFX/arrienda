@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+dist
+.output
+.wrangler
+.git
+.github
+coverage
+*.log
+.env
+.env.*
+!.env.example
+supabase/.temp
+apps/scraper/playwright-report
+apps/scraper/test-results

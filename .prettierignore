@@ -1,0 +1,9 @@
+node_modules
+dist
+.output
+.wrangler
+coverage
+bun.lock
+bun.lockb
+**/routeTree.gen.ts
+supabase/.temp

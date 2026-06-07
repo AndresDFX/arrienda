@@ -1,0 +1,9 @@
+# Secretos de servidor para `vite dev` / `wrangler dev` (NO commitear .dev.vars).
+# Copia a apps/web/.dev.vars y completa con los valores de `supabase start`.
+SUPABASE_URL="http://127.0.0.1:54321"
+SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOi...service-role-local..."
+PAYMENTS_PROVIDER="mock"
+COMMISSION_RATE="0.05"
+WOMPI_PRIVATE_KEY=""
+WOMPI_EVENTS_SECRET=""
+WOMPI_BASE_URL="https://sandbox.wompi.co/v1"
