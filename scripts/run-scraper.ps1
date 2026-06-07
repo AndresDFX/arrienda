@@ -31,6 +31,10 @@ $LogFile = Join-Path $LogDir "scraper-$Timestamp.log"
 & node --env-file=.env --experimental-strip-types 'apps/scraper/src/index.ts' --once *>> $LogFile
 $ExitCode = $LASTEXITCODE
 
+# (c2) Notificaciones de corte (avisa X dias antes segun config admin + override arrendador).
+"--- notificaciones: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ---" | Out-File -FilePath $LogFile -Encoding utf8 -Append
+& node --env-file=.env --experimental-strip-types 'apps/scraper/src/notify.ts' *>> $LogFile
+
 # (d) Escribir el codigo de salida al final del log
 "=== ARRIENDA+ scraper finalizado: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - ExitCode: $ExitCode ===" | Out-File -FilePath $LogFile -Encoding utf8 -Append
 

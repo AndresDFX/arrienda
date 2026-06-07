@@ -46,8 +46,12 @@ Cloud Run / GitHub Actions). Tras extraer, llama al paso de notificaciones.
 `liquidacion_emitida` (al generar), `pago_confirmado` (webhook), `extraccion_fallida`
 (alerta al admin/arrendador cuando el scraper falla — doc. §5.3).
 
-## Pendiente de implementar
-- [ ] `apps/scraper/src/notify.ts` (cálculo + inserción de pendientes).
-- [ ] Despachador de correos (Mailpit local / Resend prod) + plantillas.
-- [ ] UI: panel admin (config global) y panel arrendador (override) sobre `notificacion_config`.
+## Estado
+- [x] **`apps/scraper/src/notify.ts`** — cálculo + inserción (dedupe) + **despacho por email (Mailpit)**.
+  Probado end-to-end: `notify 2026-06-30` → correo en Mailpit, fila `estado='enviada'`.
+  Correr: `node --env-file=.env --experimental-strip-types apps/scraper/src/notify.ts [--fecha YYYY-MM-DD] [--dry]`
+  (`--fecha` simula "hoy"; `--dry` calcula sin enviar). Ya está enganchado al **run diario**
+  del scraper (`scripts/run-scraper.ps1`: scrape → notify).
+- [ ] UI: panel admin (config global) y arrendador (override) sobre `notificacion_config`.
 - [ ] Disparar `liquidacion_emitida` y `pago_confirmado` desde las server functions.
+- [ ] Resend (prod) + WhatsApp (Cloud API).

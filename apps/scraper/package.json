@@ -8,6 +8,7 @@
     "dev": "node --experimental-strip-types --watch src/index.ts",
     "start": "node --experimental-strip-types src/index.ts",
     "once": "node --experimental-strip-types src/index.ts --once",
+    "notify": "node --experimental-strip-types src/notify.ts",
     "serve": "node --experimental-strip-types src/server.ts",
     "inspect": "node --experimental-strip-types src/inspect.ts",
     "extract": "node --experimental-strip-types src/extract.ts",
@@ -17,11 +18,13 @@
   "dependencies": {
     "@arrienda/shared": "workspace:*",
     "@supabase/supabase-js": "^2.103.3",
+    "nodemailer": "^6.9.16",
     "playwright": "^1.60.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.16.5",
+    "@types/nodemailer": "^6.4.17",
     "typescript": "^5.8.3"
   }
 }

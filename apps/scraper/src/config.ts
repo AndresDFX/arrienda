@@ -14,4 +14,8 @@ export const config = {
   headless: (process.env.SCRAPER_HEADLESS ?? 'false') !== 'false',
   // Proxy residencial (opcional, Fase 3): http://user:pass@host:port
   proxyUrl: process.env.SCRAPER_PROXY_URL || undefined,
+  // Email (notificaciones) — local: Mailpit (localhost:1025).
+  smtpHost: process.env.SMTP_HOST ?? 'localhost',
+  smtpPort: Number(process.env.SMTP_PORT ?? '1025'),
+  emailFrom: process.env.EMAIL_FROM ?? 'ARRIENDA+ <no-reply@arriendamas.co>',
 }
