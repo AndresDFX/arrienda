@@ -13,11 +13,14 @@ export function getPaymentGateway(): PaymentGateway {
   const appBaseUrl = process.env.APP_BASE_URL ?? 'http://localhost:3000'
 
   if (provider === 'wompi') {
-    return new WompiGateway({
-      privateKey: process.env.WOMPI_PRIVATE_KEY ?? '',
-      eventsSecret: process.env.WOMPI_EVENTS_SECRET ?? '',
-      baseUrl: process.env.WOMPI_BASE_URL ?? 'https://sandbox.wompi.co/v1',
-    })
+    return new WompiGateway(
+      {
+        privateKey: process.env.WOMPI_PRIVATE_KEY ?? '',
+        eventsSecret: process.env.WOMPI_EVENTS_SECRET ?? '',
+        baseUrl: process.env.WOMPI_BASE_URL ?? 'https://sandbox.wompi.co/v1',
+      },
+      appBaseUrl,
+    )
   }
   return new MockGateway(appBaseUrl)
 }

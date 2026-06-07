@@ -15,6 +15,7 @@ import {
   listServicios,
 } from '@/lib/data'
 import { generarLiquidacion } from '@/server/liquidacion'
+import { NotifConfigForm } from '@/components/notif-config-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -46,6 +47,10 @@ function ArrendadorDashboard() {
       <PropiedadesSection arrendadorId={profile.id} />
       <ContratosSection />
       <ScraperTestCard />
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Notificaciones</h2>
+        <NotifConfigForm scope="arrendador" arrendadorId={profile.id} />
+      </section>
     </main>
   )
 }

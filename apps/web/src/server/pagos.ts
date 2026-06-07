@@ -29,7 +29,7 @@ export const confirmarPagoMock = createServerFn({ method: 'POST' })
     // Autorizacion: el caller debe ser el arrendatario del contrato de la liquidacion.
     const { data: liq } = await db
       .from('liquidaciones')
-      .select('id, contrato_id, contratos(arrendatario_id)')
+      .select('id, contrato_id, periodo, contratos(arrendatario_id)')
       .eq('id', tx.liquidacion_id)
       .single()
     type ContratoRel = { arrendatario_id?: string }
@@ -43,6 +43,21 @@ export const confirmarPagoMock = createServerFn({ method: 'POST' })
 
     await db.from('transacciones').update({ estado: 'aprobada' }).eq('id', tx.id)
     await db.from('liquidaciones').update({ estado: 'pagada' }).eq('id', tx.liquidacion_id)
+
+    // Notificación: pago confirmado (la despacha el job notify del scraper).
+    const liqRow = liq as unknown as { contrato_id?: string; periodo?: string } | null
+    if (caller.email) {
+      await db.from('notificaciones').insert({
+        contrato_id: liqRow?.contrato_id ?? null,
+        tipo: 'pago_confirmado',
+        canal: 'email',
+        destinatario: caller.email,
+        periodo: liqRow?.periodo ?? null,
+        dias_antes: 0,
+        mensaje: 'Tu pago fue confirmado. ¡Gracias!',
+        estado: 'pendiente',
+      })
+    }
 
     return { ok: true, liquidacionId: tx.liquidacion_id }
   })

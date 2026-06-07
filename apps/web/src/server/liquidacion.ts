@@ -26,7 +26,7 @@ export const generarLiquidacion = createServerFn({ method: 'POST' })
     // Contrato + propiedad
     const { data: contrato, error: errC } = await db
       .from('contratos')
-      .select('id, canon, propiedad_id')
+      .select('id, canon, propiedad_id, arrendatario_id')
       .eq('id', data.contratoId)
       .single()
     if (errC || !contrato) throw new Error('Contrato no encontrado')
@@ -132,6 +132,21 @@ export const generarLiquidacion = createServerFn({ method: 'POST' })
       pasarela: gateway.provider,
       pasarela_ref: recaudo.pasarelaRef,
     })
+
+    // Notificación: liquidación emitida (la despacha el job notify del scraper).
+    const { data: u } = await db.auth.admin.getUserById(contrato.arrendatario_id)
+    if (u?.user?.email) {
+      await db.from('notificaciones').insert({
+        contrato_id: contrato.id,
+        tipo: 'liquidacion_emitida',
+        canal: 'email',
+        destinatario: u.user.email,
+        periodo: data.periodo,
+        dias_antes: 0,
+        mensaje: `Tu liquidación de ${data.periodo} por ${resultado.total} COP está lista para pago.`,
+        estado: 'pendiente',
+      })
+    }
 
     return { liquidacionId: liq.id, desglose: resultado, checkoutUrl: recaudo.checkoutUrl }
   })

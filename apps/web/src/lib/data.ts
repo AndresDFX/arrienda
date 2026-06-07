@@ -198,6 +198,50 @@ export async function listLiquidacionItems(liquidacionId: string): Promise<Liqui
   )
 }
 
+// --- Configuración de notificaciones ---
+export interface NotifConfig {
+  dias_antes_corte: number[]
+  canal_email: boolean
+  canal_whatsapp: boolean
+  activo: boolean
+}
+
+export async function getNotifConfigGlobal(): Promise<NotifConfig | null> {
+  const { data, error } = await supabase
+    .from('notificacion_config')
+    .select('dias_antes_corte, canal_email, canal_whatsapp, activo')
+    .eq('scope', 'global')
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return (data as NotifConfig) ?? null
+}
+
+export async function saveNotifConfigGlobal(c: NotifConfig): Promise<void> {
+  const { error } = await supabase
+    .from('notificacion_config')
+    .update(c)
+    .eq('scope', 'global')
+  if (error) throw new Error(error.message)
+}
+
+export async function getMiNotifOverride(arrendadorId: string): Promise<NotifConfig | null> {
+  const { data, error } = await supabase
+    .from('notificacion_config')
+    .select('dias_antes_corte, canal_email, canal_whatsapp, activo')
+    .eq('scope', 'arrendador')
+    .eq('arrendador_id', arrendadorId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return (data as NotifConfig) ?? null
+}
+
+export async function saveMiNotifOverride(arrendadorId: string, c: NotifConfig): Promise<void> {
+  const { error } = await supabase
+    .from('notificacion_config')
+    .upsert({ scope: 'arrendador', arrendador_id: arrendadorId, ...c }, { onConflict: 'arrendador_id' })
+  if (error) throw new Error(error.message)
+}
+
 export async function getTransaccion(
   liquidacionId: string,
 ): Promise<{ pasarela_ref: string | null; estado: string; monto: number } | null> {
