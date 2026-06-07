@@ -8,9 +8,10 @@
     "dev": "node --experimental-strip-types --watch src/index.ts",
     "start": "node --experimental-strip-types src/index.ts",
     "once": "node --experimental-strip-types src/index.ts --once",
+    "serve": "node --experimental-strip-types src/server.ts",
     "inspect": "node --experimental-strip-types src/inspect.ts",
     "extract": "node --experimental-strip-types src/extract.ts",
-    "test-extractor": "node --experimental-strip-types src/test-extractor.ts",
+    "test-provider": "node --experimental-strip-types src/test-provider.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

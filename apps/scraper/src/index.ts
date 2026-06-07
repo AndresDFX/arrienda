@@ -2,9 +2,7 @@ import { chromium, type Browser } from 'playwright'
 import { config } from './config.ts'
 import { createStealthContext } from './browser.ts'
 import { claimJob, reportResult, type ScrapingJob } from './queue.ts'
-import { getExtractor } from './extractors/base.ts'
-// Registra los extractores disponibles (efecto de import):
-import './extractors/gases-de-occidente.ts'
+import { getProvider, credencialesDeProveedor } from './providers/index.ts'
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 let running = true
@@ -15,12 +13,12 @@ const ONCE = process.argv.includes('--once') || process.env.SCRAPER_MODE === 'on
 const MAX_ONCE_JOBS = 100
 
 async function processJob(browser: Browser, job: ScrapingJob): Promise<void> {
-  const extractor = getExtractor(job.comercializadora)
-  if (!extractor) {
+  const provider = getProvider(job.comercializadora)
+  if (!provider) {
     await reportResult({
       jobId: job.id,
       estado: 'fallido',
-      error: `Sin extractor registrado para "${job.comercializadora}"`,
+      error: `Sin proveedor registrado para "${job.comercializadora}"`,
     })
     return
   }
@@ -28,7 +26,12 @@ async function processJob(browser: Browser, job: ScrapingJob): Promise<void> {
   const context = await createStealthContext(browser, config.proxyUrl)
   const page = await context.newPage()
   try {
-    const data = await extractor.extract(page, job)
+    const data = await provider.extract({
+      page,
+      identificador: job.nicNis,
+      credenciales: provider.auth === 'autenticada' ? credencialesDeProveedor(provider.key) : undefined,
+      periodo: job.periodo,
+    })
     await reportResult({
       jobId: job.id,
       estado: 'completado',
@@ -36,7 +39,9 @@ async function processJob(browser: Browser, job: ScrapingJob): Promise<void> {
       refPago: data.refPago,
       fechaLimite: data.fechaLimite,
     })
-    console.log(`[scraper] job ${job.id} OK — $${data.valorExtraido}`)
+    console.log(
+      `[scraper] job ${job.id} OK — $${data.valorExtraido} (${provider.nombre}/${provider.tipo})`,
+    )
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
     await reportResult({ jobId: job.id, estado: 'fallido', error })

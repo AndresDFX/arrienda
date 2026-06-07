@@ -40,7 +40,113 @@ function ArrendadorDashboard() {
       <h1 className="text-2xl font-bold">Panel del Arrendador</h1>
       <PropiedadesSection arrendadorId={profile.id} />
       <ContratosSection />
+      <ScraperTestCard />
     </main>
+  )
+}
+
+// --------------------------------------------------- Scraper (prueba GdO)
+function ScraperTestCard() {
+  const triggerUrl =
+    (import.meta.env.VITE_SCRAPER_TRIGGER_URL as string | undefined) ?? 'http://localhost:8787'
+  const [providers, setProviders] = useState<Array<{ key: string; nombre: string; tipo: string }>>(
+    [],
+  )
+  const [provider, setProvider] = useState('gases-de-occidente')
+  const [identificador, setIdentificador] = useState('2910516')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch(`${triggerUrl}/providers`)
+      .then((r) => r.json())
+      .then((ps: Array<{ key: string; nombre: string; tipo: string }>) => {
+        setProviders(ps)
+        if (ps[0]) setProvider(ps[0].key)
+      })
+      .catch(() => {})
+  }, [triggerUrl])
+
+  async function lanzar() {
+    setLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch(`${triggerUrl}/run`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ provider, identificador }),
+      })
+      const json = (await res.json()) as {
+        ok: boolean
+        nombre?: string
+        valorExtraido?: number
+        refPago?: string
+        fechaLimite?: string
+        alDia?: boolean
+        error?: string
+      }
+      if (!json.ok) throw new Error(json.error ?? 'Error en la extraccion')
+      setResult(
+        `${json.nombre}: ${formatCOP(json.valorExtraido ?? 0)}` +
+          (json.refPago ? ` · ref ${json.refPago}` : '') +
+          (json.fechaLimite ? ` · vence ${json.fechaLimite}` : '') +
+          (json.alDia ? ' · al día' : ''),
+      )
+      toast.success(`Extraccion ${json.nombre} OK`)
+    } catch (e) {
+      toast.error(
+        e instanceof Error
+          ? `${e.message} (¿esta corriendo el scraper? bun run --cwd apps/scraper serve)`
+          : 'Error',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold">Scraper · probar proveedores</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Lanzar extraccion en vivo</CardTitle>
+          <span className="text-muted-foreground text-sm">
+            Abre un navegador real y consulta la factura del proveedor seleccionado.
+          </span>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label>Proveedor</Label>
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
+            >
+              {providers.length === 0 && (
+                <option value="gases-de-occidente">Gases de Occidente (gas)</option>
+              )}
+              {providers.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.nombre} ({p.tipo})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Contrato / cuenta</Label>
+            <Input
+              value={identificador}
+              onChange={(e) => setIdentificador(e.target.value)}
+              className="w-44"
+            />
+          </div>
+          <Button onClick={lanzar} disabled={loading}>
+            {loading ? 'Extrayendo...' : 'Lanzar scraper'}
+          </Button>
+          {result && <span className="text-primary text-sm font-medium">{result}</span>}
+        </CardContent>
+      </Card>
+    </section>
   )
 }
 

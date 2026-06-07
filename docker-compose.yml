@@ -1,15 +1,43 @@
 name: arrienda-plus
 
-# Entorno local dockerizado.
+# Entorno local dockerizado de la WEB.
 #
-# La base de datos + Auth los maneja la CLI de Supabase (`supabase start`),
-# que levanta su propio stack de contenedores. Este compose anade:
-#   - mailpit : captura los correos de prueba (liquidaciones).
-#   - scraper : motor de extraccion Playwright (Fase 1). Lo unico que de verdad
-#               NECESITA Docker; no puede correr en Cloudflare.
-#   - web     : (perfil "full", opcional) la app TanStack Start. Para desarrollo
-#               con HMR rapido se recomienda correrla en el host con `bun run dev`.
+#   - La base de datos + Auth los maneja la CLI de Supabase (`supabase start`),
+#     que levanta su propio stack. El contenedor web la alcanza via host.docker.internal.
+#   - El SCRAPER NO va aqui: necesita Chromium headful + IP residencial (Akamai/
+#     Turnstile), por eso corre en el HOST (`bun run --cwd apps/scraper serve`).
+#   - mailpit captura los correos de prueba.
+#
+# Requisitos antes de `docker compose up`:
+#   1) supabase start   (Supabase local en el host)
+#   2) cp apps/web/.dev.vars.example apps/web/.dev.vars.docker  (ya versionado el .docker con host.docker.internal)
 services:
+  web:
+    # Node base (Vite + @cloudflare/vite-plugin no funciona bajo Bun: el dev server
+    # del plugin usa WebSocket 'upgrade' que Bun no implementa). Bun solo para instalar
+    # (entiende workspace:*); Vite corre bajo Node.
+    image: node:22-bookworm-slim
+    container_name: arrienda-web
+    working_dir: /app
+    command: sh -c "npm i -g bun@1.3.14 && bun install && cd apps/web && npx vite dev --host 0.0.0.0 --port 3000"
+    environment:
+      # Evita descargar navegadores de Playwright al instalar (el scraper corre en host).
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      VITE_USE_POLLING: '1'
+      # Cliente (navegador, corre en el host -> 127.0.0.1):
+      VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-http://127.0.0.1:55321}
+      VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+      VITE_SCRAPER_TRIGGER_URL: ${VITE_SCRAPER_TRIGGER_URL:-http://localhost:8787}
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      # Sobrescribe los secretos de servidor con la version "docker" (host.docker.internal):
+      - ./apps/web/.dev.vars.docker:/app/apps/web/.dev.vars:ro
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
   mailpit:
     image: axllent/mailpit:latest
     container_name: arrienda-mailpit
@@ -17,31 +45,3 @@ services:
       - '1025:1025' # SMTP
       - '8025:8025' # UI web -> http://localhost:8025
     restart: unless-stopped
-
-  scraper:
-    build:
-      context: .
-      dockerfile: apps/scraper/Dockerfile
-    container_name: arrienda-scraper
-    env_file: .env
-    environment:
-      # Dentro del contenedor, el host se alcanza via host.docker.internal.
-      SCRAPER_API_BASE_URL: ${SCRAPER_API_BASE_URL:-http://host.docker.internal:3000}
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    restart: unless-stopped
-
-  web:
-    image: oven/bun:1.3.14
-    container_name: arrienda-web
-    profiles: ['full']
-    working_dir: /app
-    command: sh -c "bun install && bun run --cwd apps/web dev -- --host 0.0.0.0"
-    env_file: .env
-    ports:
-      - '3000:3000'
-    volumes:
-      - .:/app
-      - /app/node_modules
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'

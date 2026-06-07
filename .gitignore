@@ -13,6 +13,7 @@ build/
 # Cloudflare / Wrangler
 .wrangler/
 .dev.vars
+.dev.vars.docker
 
 # Supabase (artefactos locales)
 supabase/.temp/

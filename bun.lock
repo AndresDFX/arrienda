@@ -20,6 +20,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@arrienda/shared": "workspace:*",
+        "@supabase/supabase-js": "^2.103.3",
         "playwright": "^1.60.0",
         "zod": "^3.24.2",
       },

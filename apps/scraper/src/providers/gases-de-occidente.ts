@@ -1,24 +1,17 @@
 import type { Page } from 'playwright'
-import type { ScrapingJob } from '../queue.ts'
 import {
   parsearPesos,
-  registerExtractor,
+  registerProvider,
+  type ExtractionContext,
   type ExtractionData,
-  type Extractor,
-} from './base.ts'
+  type Provider,
+} from './types.ts'
 
 /**
- * Extractor de Gases de Occidente (portal de recaudos).
- *
- * Flujo real (verificado contra el portal con contrato real):
- *   Portal: https://portalrecaudos.gdo.com.co/pagorecaudo.aspx (ASP.NET WebForms).
- *   1. "Pagar con contrato": #pesta_0_Digitar_número_de_contrato -> #btnIngresar
- *   2. "Datos": tab "Soy otra persona" -> pesta_1_* (identificacion/nombre/...) -> #btnIngresarDatos
- *   3. Montos: "Pagar Valor Total" -> monto + referencia de pago + vencimiento
- *
- * Anti-bot: Akamai (borde) + Cloudflare Turnstile invisible. Requiere navegador
- * headful + IP residencial (ver createStealthContext y doc. seccion 5.3). Un
- * contrato inexistente responde "ERROR CLIENTE NO EXISTE".
+ * Gases de Occidente (gas) — consulta PUBLICA por numero de contrato.
+ * Portal ASP.NET: portalrecaudos.gdo.com.co. Anti-bot: Akamai + Cloudflare
+ * Turnstile invisible -> requiere navegador headful + IP residencial.
+ * Wizard: Contrato -> Datos ("Soy otra persona") -> Montos.
  */
 const PORTAL = 'https://portalrecaudos.gdo.com.co/pagorecaudo.aspx'
 
@@ -33,11 +26,6 @@ const SEL = {
   continuarDatos: '#btnIngresarDatos',
 }
 
-/**
- * Datos del "tercero que paga" (tab "Soy otra persona"). Solo se usan para
- * avanzar a la pantalla de montos (no se ejecuta el pago aqui). En produccion
- * podrian venir de configuracion / del arrendatario.
- */
 const PAGADOR = {
   identificacion: process.env.GDO_PAGADOR_ID ?? '123456789',
   nombre: process.env.GDO_PAGADOR_NOMBRE ?? 'ARRIENDA',
@@ -46,7 +34,17 @@ const PAGADOR = {
   correo: process.env.GDO_PAGADOR_CORREO ?? 'pagos@arriendamas.co',
 }
 
-/** Parsea el bloque "Pagar Valor Total" del texto de la pantalla de montos. */
+async function waitForBody(page: Page, re: RegExp, timeout: number): Promise<void> {
+  await page
+    .waitForFunction(
+      (src: string) => new RegExp(src, 'i').test(document.body?.innerText ?? ''),
+      re.source,
+      { timeout },
+    )
+    .catch(() => {})
+}
+
+/** Parsea el bloque "Pagar Valor Total" de la pantalla de montos. */
 export function parseMontos(texto: string): ExtractionData {
   const idxTotal = texto.search(/Pagar\s+Valor\s+Total/i)
   const idxVencido = texto.search(/Pagar\s+Valor\s+Vencido/i)
@@ -56,49 +54,51 @@ export function parseMontos(texto: string): ExtractionData {
   const montoM = bloque.match(/\$\s?([\d.]{3,})/)
   if (!montoM) throw new Error('No se encontro el valor total a pagar')
   const valorExtraido = parsearPesos(montoM[1] ?? '')
-
   const refPago = bloque.match(/\b\d{9}\b/)?.[0]
   const fechaM = bloque.match(/\b(\d{2})\/(\d{2})\/(\d{4})\b/)
   const fechaLimite = fechaM ? `${fechaM[3]}-${fechaM[2]}-${fechaM[1]}` : undefined
 
-  return { valorExtraido, refPago, fechaLimite }
+  return { valorExtraido, refPago, fechaLimite, alDia: valorExtraido === 0 }
 }
 
-class GasesDeOccidenteExtractor implements Extractor {
-  readonly comercializadora = 'Gases de Occidente'
+const provider: Provider = {
+  key: 'gases-de-occidente',
+  nombre: 'Gases de Occidente',
+  tipo: 'gas',
+  auth: 'publica',
+  portalUrl: PORTAL,
 
-  async extract(page: Page, job: ScrapingJob): Promise<ExtractionData> {
-    await page.goto(job.portalUrl ?? PORTAL, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+  async extract({ page, identificador }: ExtractionContext): Promise<ExtractionData> {
+    await page.goto(PORTAL, { waitUntil: 'domcontentloaded', timeout: 45_000 })
 
     // Paso 1: numero de contrato (+ Turnstile invisible).
-    await page.fill(SEL.contrato, job.nicNis)
+    await page.fill(SEL.contrato, identificador)
     await page.waitForTimeout(4500)
     await page.click(SEL.continuarContrato)
-    await page.waitForLoadState('networkidle').catch(() => {})
-    await page.waitForTimeout(3500)
+    await waitForBody(page, /soy otra persona|cliente no existe|no existe/i, 35_000)
 
     let texto = await page.locator('body').innerText()
     if (/cliente no existe|no existe/i.test(texto)) {
-      throw new Error(`Contrato ${job.nicNis} no existe en Gases de Occidente`)
+      throw new Error(`Contrato ${identificador} no existe en Gases de Occidente`)
     }
 
-    // Paso 2: "Datos" -> tab "Soy otra persona" -> formulario.
+    // Paso 2: "Datos" -> tab "Soy otra persona".
     const tab = page.getByText('Soy otra persona', { exact: false }).first()
     if (await tab.count()) await tab.click().catch(() => {})
-    await page.waitForTimeout(800)
+    await page.waitForTimeout(600)
     await page.fill(SEL.identificacion, PAGADOR.identificacion).catch(() => {})
     await page.fill(SEL.nombre, PAGADOR.nombre).catch(() => {})
     await page.fill(SEL.apellido, PAGADOR.apellido).catch(() => {})
     await page.fill(SEL.movil, PAGADOR.movil).catch(() => {})
     await page.fill(SEL.correo, PAGADOR.correo).catch(() => {})
     await page.click(SEL.continuarDatos).catch(() => {})
-    await page.waitForLoadState('networkidle').catch(() => {})
-    await page.waitForTimeout(4000)
+    await waitForBody(page, /pagar\s+valor\s+total|monto a pagar/i, 35_000)
 
     // Paso 3: montos.
     texto = await page.locator('body').innerText()
     return parseMontos(texto)
-  }
+  },
 }
 
-registerExtractor(new GasesDeOccidenteExtractor())
+registerProvider(provider)
+export default provider
