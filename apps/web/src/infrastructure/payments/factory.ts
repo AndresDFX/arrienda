@@ -1,12 +1,10 @@
-import type { PaymentGateway } from './gateway'
+import type { PaymentGateway } from '@/application/ports/payment-gateway'
 import { MockGateway } from './mock'
 import { WompiGateway } from './wompi'
 
-export type { PaymentGateway, CrearRecaudoInput, RecaudoCreado, WebhookResult } from './gateway'
-
 /**
- * Factory: devuelve la pasarela segun PAYMENTS_PROVIDER.
- * En Fase 0 el default es "mock". Cambiar a "wompi" cuando este integrado.
+ * Factory: devuelve la implementación de la pasarela según PAYMENTS_PROVIDER.
+ * En Fase 0 el default es "mock". Cambiar a "wompi" cuando esté integrado.
  */
 export function getPaymentGateway(): PaymentGateway {
   const provider = process.env.PAYMENTS_PROVIDER ?? 'mock'

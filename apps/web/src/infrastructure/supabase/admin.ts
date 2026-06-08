@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Caller } from '@/application/ports/repositories'
 
 /**
  * Cliente Supabase de SERVIDOR (service role). BYPASEA RLS — usar solo dentro
@@ -16,6 +17,8 @@ export function createAdminClient() {
   })
 }
 
+export type AdminClient = ReturnType<typeof createAdminClient>
+
 /** Cliente con la identidad del usuario (anon key + su JWT). Sirve para validar tokens. */
 function userClient(accessToken: string) {
   const url = process.env.SUPABASE_URL
@@ -28,10 +31,10 @@ function userClient(accessToken: string) {
 }
 
 /**
- * Valida el access token y devuelve el usuario (id, email). Lanza si es invalido.
- * Las server functions reciben el token desde el cliente (useAuth) para autorizar.
+ * Valida el access token y devuelve el usuario autenticado (Caller). Lanza si es
+ * inválido. Las server functions reciben el token desde el cliente (useAuth).
  */
-export async function getCallerUser(accessToken: string): Promise<{ id: string; email?: string }> {
+export async function getCallerUser(accessToken: string): Promise<Caller> {
   const { data, error } = await userClient(accessToken).auth.getUser(accessToken)
   if (error || !data.user) throw new Error('No autenticado')
   return { id: data.user.id, email: data.user.email }

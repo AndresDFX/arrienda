@@ -82,14 +82,40 @@ Tablas (migración `supabase/migrations/20260607000001_schema.sql`): `profiles`,
 
 ## 4. Pasarela de pagos — patrón puerto/adaptador
 
-`apps/web/src/server/payments/`:
-
-- `gateway.ts` — el puerto `PaymentGateway` (crearRecaudo + verificarWebhook).
-- `mock.ts` — Fase 0: simula recaudo y dispersión sin mover dinero (sin credenciales).
-- `wompi.ts` — esqueleto documentado para integrar Wompi (Fase 0/2).
-- `index.ts` — factory por `PAYMENTS_PROVIDER`.
+- Puerto: [`application/ports/payment-gateway.ts`](../apps/web/src/application/ports/payment-gateway.ts) — `PaymentGateway` (crearRecaudo + verificarWebhook).
+- Adaptadores: [`infrastructure/payments/mock.ts`](../apps/web/src/infrastructure/payments/mock.ts) (Fase 0, sin mover dinero),
+  [`wompi.ts`](../apps/web/src/infrastructure/payments/wompi.ts) (Payment Links + verificación de firma),
+  [`factory.ts`](../apps/web/src/infrastructure/payments/factory.ts) (selección por `PAYMENTS_PROVIDER`).
 
 ARRIENDA+ **no retiene dinero** (doc. §2.3): la pasarela recauda y dispersa bajo mandato.
+
+## 4.1 Clean Architecture en `apps/web`
+
+La lógica de negocio se organiza en capas con la **dependencia apuntando hacia adentro**
+(el dominio no conoce nada de fuera; el framework está en el borde):
+
+```
+  presentation/  → infrastructure/ → application/ → domain (@arrienda/shared)
+  (TanStack,         (Supabase,        (casos de uso     (entidades + reglas:
+   rutas React)       pasarelas)         + puertos)         dinero, liquidación)
+```
+
+| Capa | Carpeta | Responsabilidad | Depende de |
+| --- | --- | --- | --- |
+| **Dominio** | `packages/shared` | Entidades y reglas puras (comisión, liquidación, notificaciones). Sin framework. | nada |
+| **Aplicación** | `apps/web/src/application` | Casos de uso (`generar-liquidacion`, `confirmar-pago`) + **puertos** (repos, `PaymentGateway`) + errores. | dominio |
+| **Infraestructura** | `apps/web/src/infrastructure` | Adaptadores que implementan los puertos: repos Supabase, pasarelas (mock/wompi). | aplicación |
+| **Presentación** | `apps/web/src/presentation`, `routes/`, `components/` | server functions (transporte) que cablean infra → caso de uso; UI React. | aplicación + infra |
+
+**Por qué:** los casos de uso no importan Supabase ni TanStack; reciben sus dependencias
+por inyección (`makeSupabaseRepositories(db)` + `getPaymentGateway()` en la presentación), así
+que la regla de negocio es testeable con dobles en memoria y la BD/pasarela son reemplazables.
+La lectura para la UI (`lib/data.ts`) usa Supabase con la sesión del usuario (RLS) — es el
+adaptador de lectura del lado cliente.
+
+> El **scraper** (`apps/scraper`) sigue el mismo espíritu hexagonal: el puerto `Provider`
+> (`providers/types.ts`) con adaptadores por comercializadora, la cola (`queue.ts`) como
+> infraestructura y el worker (`index.ts`) como orquestador.
 
 ## 5. Modelo de variables y secretos
 

@@ -1,10 +1,10 @@
 /**
- * Contrato de la pasarela de pagos (puerto).
+ * Puerto de la pasarela de pagos (capa de aplicación).
  *
- * ARRIENDA+ NO retiene dinero (doc. seccion 2.3): la pasarela recauda del
- * arrendatario y dispersa a multiples destinos bajo modelo de mandato. Este
- * puerto abstrae esa operacion para poder cambiar de proveedor (mock -> Wompi)
- * sin tocar la logica de negocio.
+ * ARRIENDA+ NO retiene dinero (doc. sección 2.3): la pasarela recauda del
+ * arrendatario y dispersa a múltiples destinos bajo modelo de mandato. Este
+ * puerto abstrae esa operación para poder cambiar de proveedor (mock → Wompi)
+ * sin tocar los casos de uso. Las implementaciones viven en infrastructure/payments.
  */
 import type { MovimientoDispersion, PaymentProvider } from '@arrienda/shared'
 
@@ -12,11 +12,11 @@ export interface CrearRecaudoInput {
   liquidacionId: string
   /** Total a cobrar al arrendatario, en pesos enteros. */
   monto: number
-  /** Referencia unica del recaudo (idempotencia). */
+  /** Referencia única del recaudo (idempotencia). */
   referencia: string
   descripcion: string
   emailArrendatario?: string
-  /** Plan de dispersion (a donde va cada peso una vez aprobado el pago). */
+  /** Plan de dispersión (a dónde va cada peso una vez aprobado el pago). */
   dispersion: MovimientoDispersion[]
 }
 

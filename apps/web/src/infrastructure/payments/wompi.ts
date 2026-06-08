@@ -3,7 +3,7 @@ import type {
   PaymentGateway,
   RecaudoCreado,
   WebhookResult,
-} from './gateway'
+} from '@/application/ports/payment-gateway'
 
 /** SHA-256 hex usando Web Crypto (disponible en Cloudflare Workers). */
 async function sha256Hex(input: string): Promise<string> {

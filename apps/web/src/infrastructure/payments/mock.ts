@@ -3,10 +3,10 @@ import type {
   PaymentGateway,
   RecaudoCreado,
   WebhookResult,
-} from './gateway'
+} from '@/application/ports/payment-gateway'
 
 /**
- * Implementacion MOCK de la pasarela (Fase 0).
+ * Adaptador MOCK de la pasarela (Fase 0).
  *
  * No mueve dinero real: genera una referencia y una URL de checkout simulada.
  * El "pago" se confirma llamando al endpoint de webhook con un cuerpo JSON

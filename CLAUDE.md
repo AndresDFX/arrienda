@@ -21,14 +21,20 @@ no retiene fondos (orquestador de pagos). Documento de producto: `ARRIENDA+ Conc
 - Monorepo **Bun workspaces**. Marca: teal/esmeralda + *Plus Jakarta Sans*; logo en `components/brand/logo.tsx`.
 
 ## Estructura
-- `apps/web/src/`
+- `apps/web/src/` — **Clean Architecture** (dependencias hacia adentro; ver docs/ARQUITECTURA.md §4.1):
+  - **dominio** = `@arrienda/shared` (entidades + reglas puras).
+  - `application/` — casos de uso (`use-cases/generar-liquidacion`, `confirmar-pago`) + puertos
+    (`ports/repositories.ts`, `ports/payment-gateway.ts`) + `errors.ts`. Sin framework ni Supabase.
+  - `infrastructure/` — adapters: `supabase/` (`admin.ts` cliente service-role + `getCallerUser`;
+    `repositories.ts` implementa los puertos) y `payments/` (`mock`, `wompi`, `factory`).
+  - `presentation/server/` — server functions de TanStack delgadas (`liquidacion.ts`, `pagos.ts`)
+    que cablean infra → caso de uso. UI también es presentación:
   - `routes/` — `__root.tsx` (providers + nav), `index.tsx` (landing), `login`/`signup`, `admin`,
     `arrendador`, `arrendatario`, `pago.simulado`, `design` (showcase del design system).
   - `components/` — `ui/` (button, card, input, label, select, badge), `layout.tsx`
     (PageContainer/PageHeader/Section/Field/FormGrid), `brand/logo.tsx`, `notif-config-form.tsx`.
-  - `lib/` — `auth.tsx` (sesión/roles), `data.ts` (queries Supabase con RLS), `supabase/{client,server}.ts`, `env.ts`.
-  - `server/` — `liquidacion.ts` (genera liquidación, consume extracciones), `pagos.ts` (confirma pago
-    mock), `payments/` (puerto `PaymentGateway` + `mock` + `wompi` + factory).
+  - `lib/` — `auth.tsx` (sesión/roles), `data.ts` (lectura para la UI: Supabase con RLS),
+    `supabase/client.ts` (cliente navegador), `env.ts`.
 - `apps/scraper/src/`
   - `providers/` — `types.ts` (interfaz `Provider` categorizada por tipo + registro), `index.ts`
     (registra todos + `credencialesDeProveedor`), `gases-de-occidente.ts`, `celsia.ts`, `acuavalle.ts`,
@@ -37,7 +43,9 @@ no retiene fondos (orquestador de pagos). Documento de producto: `ARRIENDA+ Conc
     `notify.ts` (job de notificaciones de corte → email), `queue.ts` (RPCs de cola), `config.ts`, `browser.ts`
     (contexto stealth), recon/test: `inspect.ts`, `extract.ts`, `recon-*.ts`, `test-provider.ts`, `shot.ts`.
 - `packages/shared/src/` — `domain.ts` (enums), `money.ts`, `liquidacion.ts`, `notificaciones.ts`, `schemas.ts` (+ tests).
-- `supabase/` — `config.toml` (puertos remapeados a **553xx**), `migrations/` (5), `seed.sql`.
+- `supabase/` — `config.toml` (puertos remapeados a **553xx**), `migrations/` (6), `seed.sql`.
+- `.github/workflows/` — `ci.yml` (lint/test/typecheck/build) **activo**; `deploy.yml.disabled` y
+  `scraper.yml.disabled` **desactivados** (no se sube a cloud aún; re-activar quitando `.disabled`).
 - `scripts/` — `seed-users.ts`, `seed-demo.ts` (gas GdO), `seed-celsia.ts` (energía Celsia con
   credenciales por servicio, leídas del `.env`), `migration-status.ts`, `smoke-fase0.ts`, `run-scraper.ps1`.
 - `docs/` — ESTADO, DESARROLLO-LOCAL, ARQUITECTURA, DESIGN-SYSTEM, NOTIFICACIONES, WOMPI-INTEGRACION, LIMITACIONES.

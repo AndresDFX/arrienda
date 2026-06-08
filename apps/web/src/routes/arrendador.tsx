@@ -14,7 +14,7 @@ import {
   listPropiedades,
   listServicios,
 } from '@/lib/data'
-import { generarLiquidacion } from '@/server/liquidacion'
+import { generarLiquidacion } from '@/presentation/server/liquidacion'
 import { NotifConfigForm } from '@/components/notif-config-form'
 import { PageContainer, PageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/button'
