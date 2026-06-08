@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/logo'
 
@@ -77,15 +78,10 @@ function SignupPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="rol">Rol</Label>
-              <select
-                id="rol"
-                value={rol}
-                onChange={(e) => setRol(e.target.value as Rol)}
-                className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
-              >
+              <Select id="rol" value={rol} onChange={(e) => setRol(e.target.value as Rol)}>
                 <option value="arrendador">Arrendador</option>
                 <option value="arrendatario">Arrendatario</option>
-              </select>
+              </Select>
             </div>
             <Button type="submit" disabled={loading}>
               {loading ? 'Creando...' : 'Crear cuenta'}

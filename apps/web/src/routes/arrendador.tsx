@@ -20,6 +20,7 @@ import { PageContainer, PageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const Route = createFileRoute('/arrendador')({ component: ArrendadorDashboard })
@@ -126,11 +127,7 @@ function ScraperTestCard() {
         <CardContent className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1.5">
             <Label>Proveedor</Label>
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
-            >
+            <Select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-56">
               {providers.length === 0 && (
                 <option value="gases-de-occidente">Gases de Occidente (gas)</option>
               )}
@@ -139,7 +136,7 @@ function ScraperTestCard() {
                   {p.nombre} ({p.tipo})
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Contrato / cuenta</Label>
@@ -203,14 +200,13 @@ function PropiedadesSection({ arrendadorId }: { arrendadorId: string }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Modalidad</Label>
-          <select
+          <Select
             value={modalidad}
             onChange={(e) => setModalidad(e.target.value as ModalidadCobro)}
-            className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
           >
             <option value="completo">Completo (con servicios)</option>
             <option value="sin_servicios">Sin servicios</option>
-          </select>
+          </Select>
         </div>
         <Button type="submit" disabled={crear.isPending}>
           Agregar
@@ -277,27 +273,23 @@ function ServiciosSubsection({ propiedadId }: { propiedadId: string }) {
           crear.mutate()
         }}
       >
-        <select
+        <Select
           value={tipo}
           onChange={(e) => setTipo(e.target.value as TipoServicio)}
-          className="border-input h-8 rounded-md border bg-transparent px-2 text-xs"
+          className="w-28"
         >
           <option value="gas">gas</option>
           <option value="energia">energia</option>
           <option value="agua">agua</option>
-        </select>
-        <select
-          value={comId}
-          onChange={(e) => setComId(e.target.value)}
-          className="border-input h-8 rounded-md border bg-transparent px-2 text-xs"
-        >
+        </Select>
+        <Select value={comId} onChange={(e) => setComId(e.target.value)} className="w-48">
           <option value="">comercializadora...</option>
           {comers.data?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nombre}
             </option>
           ))}
-        </select>
+        </Select>
         <Input
           className="h-8 w-40 text-xs"
           placeholder="NIC / contrato"
@@ -379,18 +371,14 @@ function ContratosSection() {
       >
         <div className="flex flex-col gap-1.5">
           <Label>Propiedad</Label>
-          <select
-            value={propiedadId}
-            onChange={(e) => setPropiedadId(e.target.value)}
-            className="border-input h-9 rounded-md border bg-transparent px-3 text-sm"
-          >
+          <Select value={propiedadId} onChange={(e) => setPropiedadId(e.target.value)}>
             <option value="">elegir...</option>
             {propiedades.data?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.direccion}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Email arrendatario</Label>
