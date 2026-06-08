@@ -13,14 +13,32 @@ const ONCE = process.argv.includes('--once') || process.env.SCRAPER_MODE === 'on
 const MAX_ONCE_JOBS = 100
 
 async function processJob(browser: Browser, job: ScrapingJob): Promise<void> {
-  const provider = getProvider(job.comercializadora)
+  const provider = getProvider(job.providerKey ?? job.comercializadora)
   if (!provider) {
     await reportResult({
       jobId: job.id,
       estado: 'fallido',
-      error: `Sin proveedor registrado para "${job.comercializadora}"`,
+      error: `Sin proveedor registrado para "${job.providerKey ?? job.comercializadora}"`,
     })
     return
+  }
+
+  // Credenciales: las del servicio (configuradas por el arrendador) tienen
+  // prioridad; si no hay, cae al env (util para pruebas con una sola cuenta).
+  let credenciales = undefined
+  if (provider.auth === 'autenticada') {
+    credenciales =
+      job.portalUsuario && job.portalPassword
+        ? { email: job.portalUsuario, password: job.portalPassword }
+        : credencialesDeProveedor(provider.key)
+    if (!credenciales) {
+      await reportResult({
+        jobId: job.id,
+        estado: 'fallido',
+        error: `"${provider.nombre}" requiere credenciales y el servicio no las tiene configuradas`,
+      })
+      return
+    }
   }
 
   const context = await createStealthContext(browser, config.proxyUrl)
@@ -29,7 +47,7 @@ async function processJob(browser: Browser, job: ScrapingJob): Promise<void> {
     const data = await provider.extract({
       page,
       identificador: job.nicNis,
-      credenciales: provider.auth === 'autenticada' ? credencialesDeProveedor(provider.key) : undefined,
+      credenciales,
       periodo: job.periodo,
     })
     await reportResult({

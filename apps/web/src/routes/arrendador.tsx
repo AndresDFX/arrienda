@@ -59,18 +59,23 @@ function ArrendadorDashboard() {
 function ScraperTestCard() {
   const triggerUrl =
     (import.meta.env.VITE_SCRAPER_TRIGGER_URL as string | undefined) ?? 'http://localhost:8787'
-  const [providers, setProviders] = useState<Array<{ key: string; nombre: string; tipo: string }>>(
-    [],
-  )
+  const [providers, setProviders] = useState<
+    Array<{ key: string; nombre: string; tipo: string; auth: string }>
+  >([])
   const [provider, setProvider] = useState('gases-de-occidente')
   const [identificador, setIdentificador] = useState('2910516')
+  const [usuario, setUsuario] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<string | null>(null)
+
+  const provSel = providers.find((p) => p.key === provider)
+  const requiereCreds = provSel?.auth === 'autenticada'
 
   useEffect(() => {
     fetch(`${triggerUrl}/providers`)
       .then((r) => r.json())
-      .then((ps: Array<{ key: string; nombre: string; tipo: string }>) => {
+      .then((ps: Array<{ key: string; nombre: string; tipo: string; auth: string }>) => {
         setProviders(ps)
         if (ps[0]) setProvider(ps[0].key)
       })
@@ -84,7 +89,9 @@ function ScraperTestCard() {
       const res = await fetch(`${triggerUrl}/run`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ provider, identificador }),
+        body: JSON.stringify(
+          requiereCreds ? { provider, identificador, usuario, password } : { provider, identificador },
+        ),
       })
       const json = (await res.json()) as {
         ok: boolean
@@ -146,6 +153,30 @@ function ScraperTestCard() {
               className="w-44"
             />
           </div>
+          {requiereCreds && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <Label>Usuario</Label>
+                <Input
+                  value={usuario}
+                  autoComplete="off"
+                  onChange={(e) => setUsuario(e.target.value)}
+                  className="w-44"
+                  placeholder={`usuario ${provSel?.nombre ?? ''}`}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Contraseña</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  autoComplete="new-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-44"
+                />
+              </div>
+            </>
+          )}
           <Button onClick={lanzar} disabled={loading}>
             {loading ? 'Extrayendo...' : 'Lanzar scraper'}
           </Button>
@@ -245,13 +276,29 @@ function ServiciosSubsection({ propiedadId }: { propiedadId: string }) {
   const [tipo, setTipo] = useState<TipoServicio>('gas')
   const [comId, setComId] = useState('')
   const [nic, setNic] = useState('')
+  const [usuario, setUsuario] = useState('')
+  const [password, setPassword] = useState('')
+
+  // La comercializadora elegida decide si el portal pide login (Celsia) o
+  // basta el numero de contrato (Gases de Occidente).
+  const comSel = comers.data?.find((c) => c.id === comId)
+  const requiereCreds = comSel?.requiere_credenciales ?? false
 
   const crear = useMutation({
     mutationFn: () =>
-      createServicio({ propiedadId, tipo, comercializadoraId: comId, nicNis: nic }),
+      createServicio({
+        propiedadId,
+        tipo,
+        comercializadoraId: comId,
+        nicNis: nic,
+        portalUsuario: requiereCreds ? usuario : undefined,
+        portalPassword: requiereCreds ? password : undefined,
+      }),
     onSuccess: () => {
       toast.success('Servicio agregado')
       setNic('')
+      setUsuario('')
+      setPassword('')
       qc.invalidateQueries({ queryKey: ['servicios', propiedadId] })
     },
     onError: (e: Error) => toast.error(e.message),
@@ -259,34 +306,49 @@ function ServiciosSubsection({ propiedadId }: { propiedadId: string }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Servicios (NIC/NIS)</p>
-      {servicios.data?.map((s) => <ExtraccionRow key={s.id} servicioId={s.id} tipo={s.tipo} nic={s.nic_nis} />)}
+      <p className="text-sm font-medium">Servicios públicos</p>
+      {servicios.data?.map((s) => (
+        <ExtraccionRow
+          key={s.id}
+          servicioId={s.id}
+          tipo={s.tipo}
+          nic={s.nic_nis}
+          usuario={s.portal_usuario}
+        />
+      ))}
       {servicios.data?.length === 0 && (
         <p className="text-muted-foreground text-xs">Sin servicios registrados.</p>
       )}
 
       <form
-        className="flex flex-wrap items-end gap-2"
+        className="flex flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-3"
         onSubmit={(e) => {
           e.preventDefault()
           if (!comId) return toast.error('Elige comercializadora')
+          if (requiereCreds && (!usuario || !password))
+            return toast.error(`${comSel?.nombre} requiere usuario y contraseña`)
           crear.mutate()
         }}
       >
         <Select
           value={tipo}
           onChange={(e) => setTipo(e.target.value as TipoServicio)}
-          className="w-28"
+          className="h-8 w-28 text-xs"
         >
           <option value="gas">gas</option>
           <option value="energia">energia</option>
           <option value="agua">agua</option>
         </Select>
-        <Select value={comId} onChange={(e) => setComId(e.target.value)} className="w-48">
+        <Select
+          value={comId}
+          onChange={(e) => setComId(e.target.value)}
+          className="h-8 w-48 text-xs"
+        >
           <option value="">comercializadora...</option>
           {comers.data?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nombre}
+              {c.requiere_credenciales ? ' 🔒' : ''}
             </option>
           ))}
         </Select>
@@ -295,16 +357,52 @@ function ServiciosSubsection({ propiedadId }: { propiedadId: string }) {
           placeholder="NIC / contrato"
           value={nic}
           onChange={(e) => setNic(e.target.value)}
+          required
         />
+        {requiereCreds && (
+          <>
+            <Input
+              className="h-8 w-44 text-xs"
+              placeholder={`usuario ${comSel?.nombre ?? ''}`}
+              autoComplete="off"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+            />
+            <Input
+              type="password"
+              className="h-8 w-40 text-xs"
+              placeholder="contraseña"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </>
+        )}
         <Button type="submit" size="sm" variant="outline" disabled={crear.isPending}>
           + servicio
         </Button>
+        {requiereCreds && (
+          <p className="text-muted-foreground w-full text-[11px]">
+            🔒 {comSel?.nombre} es un portal autenticado: ingresa el usuario y contraseña del
+            titular. Solo el motor de scraping y tú los usan; el arrendatario no los ve.
+          </p>
+        )}
       </form>
     </div>
   )
 }
 
-function ExtraccionRow({ servicioId, tipo, nic }: { servicioId: string; tipo: string; nic: string }) {
+function ExtraccionRow({
+  servicioId,
+  tipo,
+  nic,
+  usuario,
+}: {
+  servicioId: string
+  tipo: string
+  nic: string
+  usuario?: string | null
+}) {
   const ext = useQuery({
     queryKey: ['extracciones', servicioId],
     queryFn: () => listExtracciones(servicioId),
@@ -314,6 +412,7 @@ function ExtraccionRow({ servicioId, tipo, nic }: { servicioId: string; tipo: st
     <div className="flex items-center justify-between rounded border px-3 py-1.5 text-xs">
       <span>
         {tipo} · {nic}
+        {usuario && <span className="text-muted-foreground"> · 🔒 {usuario}</span>}
       </span>
       {ultima?.valor_extraido ? (
         <span className="text-primary font-medium">

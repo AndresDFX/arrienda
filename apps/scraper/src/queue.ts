@@ -8,8 +8,13 @@ export interface ScrapingJob {
   servicioId: string
   tipo: TipoServicio
   comercializadora: string
+  /** Clave del proveedor del scraper (preferida sobre el nombre). */
+  providerKey: string | null
   portalUrl: string | null
   nicNis: string
+  /** Credenciales del titular (solo proveedores autenticados). */
+  portalUsuario: string | null
+  portalPassword: string | null
   periodo: string
 }
 

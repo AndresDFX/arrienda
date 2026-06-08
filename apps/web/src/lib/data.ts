@@ -18,6 +18,8 @@ export interface Comercializadora {
   nombre: string
   tipo: TipoServicio
   recaudador_id: string | null
+  provider_key: string | null
+  requiere_credenciales: boolean
 }
 
 export interface Servicio {
@@ -26,6 +28,8 @@ export interface Servicio {
   tipo: TipoServicio
   comercializadora_id: string
   nic_nis: string
+  /** Usuario del portal (solo proveedores autenticados). La contraseña NUNCA se expone al cliente. */
+  portal_usuario: string | null
 }
 
 export interface Extraccion {
@@ -99,13 +103,24 @@ export async function createPropiedad(input: {
 }
 
 // --- Catalogos / servicios ---
+// Columnas no sensibles de servicios_publicos (NUNCA portal_password).
+const SERVICIO_COLS = 'id, propiedad_id, tipo, comercializadora_id, nic_nis, portal_usuario'
+
 export async function listComercializadoras(): Promise<Comercializadora[]> {
-  return unwrap(await supabase.from('comercializadoras').select('*').order('nombre'))
+  return unwrap(
+    await supabase
+      .from('comercializadoras')
+      .select('id, nombre, tipo, recaudador_id, provider_key, requiere_credenciales')
+      .order('nombre'),
+  )
 }
 
 export async function listServicios(propiedadId: string): Promise<Servicio[]> {
   return unwrap(
-    await supabase.from('servicios_publicos').select('*').eq('propiedad_id', propiedadId),
+    await supabase
+      .from('servicios_publicos')
+      .select(SERVICIO_COLS)
+      .eq('propiedad_id', propiedadId),
   )
 }
 
@@ -114,6 +129,9 @@ export async function createServicio(input: {
   tipo: TipoServicio
   comercializadoraId: string
   nicNis: string
+  /** Solo para proveedores autenticados (ej. Celsia). */
+  portalUsuario?: string
+  portalPassword?: string
 }): Promise<Servicio> {
   return unwrap(
     await supabase
@@ -123,8 +141,10 @@ export async function createServicio(input: {
         tipo: input.tipo,
         comercializadora_id: input.comercializadoraId,
         nic_nis: input.nicNis,
+        portal_usuario: input.portalUsuario || null,
+        portal_password: input.portalPassword || null,
       })
-      .select('*')
+      .select(SERVICIO_COLS)
       .single(),
   )
 }
