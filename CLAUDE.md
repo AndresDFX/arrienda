@@ -38,7 +38,8 @@ no retiene fondos (orquestador de pagos). Documento de producto: `ARRIENDA+ Conc
     (contexto stealth), recon/test: `inspect.ts`, `extract.ts`, `recon-*.ts`, `test-provider.ts`, `shot.ts`.
 - `packages/shared/src/` — `domain.ts` (enums), `money.ts`, `liquidacion.ts`, `notificaciones.ts`, `schemas.ts` (+ tests).
 - `supabase/` — `config.toml` (puertos remapeados a **553xx**), `migrations/` (5), `seed.sql`.
-- `scripts/` — `seed-users.ts`, `seed-demo.ts`, `migration-status.ts`, `smoke-fase0.ts`, `run-scraper.ps1`.
+- `scripts/` — `seed-users.ts`, `seed-demo.ts` (gas GdO), `seed-celsia.ts` (energía Celsia con
+  credenciales por servicio, leídas del `.env`), `migration-status.ts`, `smoke-fase0.ts`, `run-scraper.ps1`.
 - `docs/` — ESTADO, DESARROLLO-LOCAL, ARQUITECTURA, DESIGN-SYSTEM, NOTIFICACIONES, WOMPI-INTEGRACION, LIMITACIONES.
 
 ## Cómo correr (resumen; detalle en docs/DESARROLLO-LOCAL.md)
