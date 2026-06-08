@@ -81,10 +81,12 @@ function LiquidacionCard({
       toast.error('No hay transaccion para esta liquidacion')
       return
     }
-    navigate({
-      to: '/pago/simulado',
-      search: { ref: tx.pasarela_ref, liq: id, monto: total },
-    })
+    if (tx.pasarela === 'wompi') {
+      // Checkout real de Wompi (PSE / tarjeta).
+      window.open(`https://checkout.wompi.co/l/${tx.pasarela_ref}`, '_blank')
+      return
+    }
+    navigate({ to: '/pago/simulado', search: { ref: tx.pasarela_ref, liq: id, monto: total } })
   }
 
   return (

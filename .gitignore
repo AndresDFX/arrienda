@@ -38,6 +38,8 @@ apps/scraper/.auth/
 
 # Recon/scraping artifacts (screenshots, HTML con datos reales)
 .inspect/
+# Perfil de navegador persistente (sesiones/cookies)
+.aqua-profile/
 apps/scraper/.inspect/
 
 # Editor / OS

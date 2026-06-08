@@ -244,10 +244,10 @@ export async function saveMiNotifOverride(arrendadorId: string, c: NotifConfig):
 
 export async function getTransaccion(
   liquidacionId: string,
-): Promise<{ pasarela_ref: string | null; estado: string; monto: number } | null> {
+): Promise<{ pasarela: string; pasarela_ref: string | null; estado: string; monto: number } | null> {
   const { data, error } = await supabase
     .from('transacciones')
-    .select('pasarela_ref, estado, monto')
+    .select('pasarela, pasarela_ref, estado, monto')
     .eq('liquidacion_id', liquidacionId)
     .order('created_at', { ascending: false })
     .limit(1)
