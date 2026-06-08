@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, type ReactNode } from 'react'
 import { useAuth } from '@/lib/auth'
 import { NotifConfigForm } from '@/components/notif-config-form'
+import { PageContainer, PageHeader } from '@/components/layout'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const Route = createFileRoute('/admin')({ component: AdminDashboard })
@@ -26,11 +27,8 @@ function AdminDashboard() {
   if (profile.rol !== 'admin') return <Centered>Esta sección es solo para administradores.</Centered>
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Panel del Administrador</h1>
-        <p className="text-muted-foreground mt-1">Parámetros del sistema y supervisión.</p>
-      </header>
+    <PageContainer className="space-y-8">
+      <PageHeader title="Panel del Administrador" subtitle="Parámetros del sistema y supervisión." />
 
       <NotifConfigForm scope="global" />
 
@@ -49,7 +47,7 @@ function AdminDashboard() {
           ))}
         </div>
       </section>
-    </main>
+    </PageContainer>
   )
 }
 

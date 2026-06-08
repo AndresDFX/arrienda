@@ -16,6 +16,7 @@ import {
 } from '@/lib/data'
 import { generarLiquidacion } from '@/server/liquidacion'
 import { NotifConfigForm } from '@/components/notif-config-form'
+import { PageContainer, PageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,13 +38,11 @@ function ArrendadorDashboard() {
     return <Centered>Esta seccion es solo para arrendadores.</Centered>
 
   return (
-    <main className="mx-auto max-w-4xl space-y-10 px-6 py-10">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Panel del Arrendador</h1>
-        <p className="text-muted-foreground mt-1">
-          Gestiona tus propiedades, contratos y liquidaciones.
-        </p>
-      </header>
+    <PageContainer className="space-y-10">
+      <PageHeader
+        title="Panel del Arrendador"
+        subtitle="Gestiona tus propiedades, contratos y liquidaciones."
+      />
       <PropiedadesSection arrendadorId={profile.id} />
       <ContratosSection />
       <ScraperTestCard />
@@ -51,7 +50,7 @@ function ArrendadorDashboard() {
         <h2 className="text-lg font-semibold">Notificaciones</h2>
         <NotifConfigForm scope="arrendador" arrendadorId={profile.id} />
       </section>
-    </main>
+    </PageContainer>
   )
 }
 
@@ -371,7 +370,7 @@ function ContratosSection() {
       <h2 className="text-lg font-semibold">Contratos</h2>
 
       <form
-        className="grid grid-cols-2 gap-3 rounded-lg border p-4 md:grid-cols-3"
+        className="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-2 md:grid-cols-3"
         onSubmit={(e) => {
           e.preventDefault()
           if (!propiedadId) return toast.error('Elige propiedad')

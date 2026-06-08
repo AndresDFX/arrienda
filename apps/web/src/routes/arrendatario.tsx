@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { formatCOP } from '@arrienda/shared'
 import { useAuth } from '@/lib/auth'
 import { getTransaccion, listLiquidacionItems, listLiquidaciones } from '@/lib/data'
+import { PageContainer, PageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -36,8 +37,8 @@ function ArrendatarioDashboard() {
   if (!profile) return null
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-6 py-10">
-      <h1 className="text-2xl font-bold">Mis liquidaciones</h1>
+    <PageContainer className="max-w-3xl space-y-6">
+      <PageHeader title="Mis liquidaciones" subtitle="Consulta y paga tus liquidaciones." />
       {liquidaciones.data?.length === 0 && (
         <p className="text-muted-foreground text-sm">Aun no tienes liquidaciones.</p>
       )}
@@ -52,7 +53,7 @@ function ArrendatarioDashboard() {
           />
         ))}
       </div>
-    </main>
+    </PageContainer>
   )
 }
 
