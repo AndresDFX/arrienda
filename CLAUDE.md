@@ -1,64 +1,80 @@
 # CLAUDE.md — Contexto del proyecto ARRIENDA+
 
-Guía para asistentes de IA que trabajen en este repositorio.
+Guía para asistentes de IA (y humanos) que trabajen en este repo. Mantener al día.
+**Para continuar en otra máquina y ver el estado/pendientes:** `docs/ESTADO.md`.
 
 ## Qué es
-
 Plataforma de gestión y recaudo de arriendos con servicios públicos para **toda Colombia**.
-Tres roles (admin, arrendador, arrendatario), comisión del 5% **solo sobre el canon**,
-servicios públicos como pass-through. Producto: `ARRIENDA+ Concepto y Arquitectura.md`.
-Arquitectura: `docs/ARQUITECTURA.md`. **Cómo correr en local + usuarios + seeds: `docs/DESARROLLO-LOCAL.md`.**
+Tres roles (admin, arrendador, arrendatario). Modelo: **comisión 5% solo sobre el canon**;
+los servicios públicos (energía/agua/gas) son **pass-through** (sin sobreprecio). La plataforma
+no retiene fondos (orquestador de pagos). Documento de producto: `ARRIENDA+ Concepto y Arquitectura.md`.
 
-## Stack
+## Stack y runtimes (importante)
+- **Web** (`apps/web`): TanStack Start (React 19) + Vite → **Cloudflare Workers**; Supabase
+  (Postgres + Auth + RLS); shadcn/ui (new-york) + Tailwind v4; TanStack Query; React Hook Form; Zod.
+  - En LOCAL corre en **Docker con imagen Node** (no Bun: Vite + plugin Cloudflare usa WebSocket
+    `upgrade` que Bun no implementa). Bun solo instala.
+- **Scraper** (`apps/scraper`): Playwright. **No corre en Cloudflare ni en contenedor**: necesita
+  **Chromium headful + IP residencial** (anti-bot). Corre en el host con **Node** (Playwright falla
+  bajo Bun en Windows). Se ejecuta con `node --experimental-strip-types`.
+- **Dominio** (`packages/shared`): TS puro (sin framework), testeado con Vitest.
+- Monorepo **Bun workspaces**. Marca: teal/esmeralda + *Plus Jakarta Sans*; logo en `components/brand/logo.tsx`.
 
-TanStack Start (React 19) + Vite → **Cloudflare Workers** · Supabase (Postgres + Auth + RLS) ·
-shadcn/ui (new-york) + Tailwind v4 · TanStack Query · React Hook Form · Zod · Bun workspaces.
-Scraper: Playwright (Node). Marca: teal/esmeralda + *Plus Jakarta Sans*, logo en `components/brand/logo.tsx`.
+## Estructura
+- `apps/web/src/`
+  - `routes/` — `__root.tsx` (providers + nav), `index.tsx` (landing), `login`/`signup`, `admin`,
+    `arrendador`, `arrendatario`, `pago.simulado`, `design` (showcase del design system).
+  - `components/` — `ui/` (button, card, input, label, select, badge), `layout.tsx`
+    (PageContainer/PageHeader/Section/Field/FormGrid), `brand/logo.tsx`, `notif-config-form.tsx`.
+  - `lib/` — `auth.tsx` (sesión/roles), `data.ts` (queries Supabase con RLS), `supabase/{client,server}.ts`, `env.ts`.
+  - `server/` — `liquidacion.ts` (genera liquidación, consume extracciones), `pagos.ts` (confirma pago
+    mock), `payments/` (puerto `PaymentGateway` + `mock` + `wompi` + factory).
+- `apps/scraper/src/`
+  - `providers/` — `types.ts` (interfaz `Provider` categorizada por tipo + registro), `index.ts`
+    (registra todos + `credencialesDeProveedor`), `gases-de-occidente.ts`, `celsia.ts`, `acuavalle.ts`,
+    `aquaservicios.ts`.
+  - `index.ts` (worker de cola, modo `--once`/loop), `server.ts` (disparador HTTP: `/run`, `/providers`),
+    `notify.ts` (job de notificaciones de corte → email), `queue.ts` (RPCs de cola), `config.ts`, `browser.ts`
+    (contexto stealth), recon/test: `inspect.ts`, `extract.ts`, `recon-*.ts`, `test-provider.ts`, `shot.ts`.
+- `packages/shared/src/` — `domain.ts` (enums), `money.ts`, `liquidacion.ts`, `notificaciones.ts`, `schemas.ts` (+ tests).
+- `supabase/` — `config.toml` (puertos remapeados a **553xx**), `migrations/` (5), `seed.sql`.
+- `scripts/` — `seed-users.ts`, `seed-demo.ts`, `migration-status.ts`, `smoke-fase0.ts`, `run-scraper.ps1`.
+- `docs/` — ESTADO, DESARROLLO-LOCAL, ARQUITECTURA, DESIGN-SYSTEM, NOTIFICACIONES, WOMPI-INTEGRACION, LIMITACIONES.
 
-## Layout
-
-- `apps/web` — app principal (frontend + server functions). Deploy a Cloudflare. En local
-  corre en Docker con imagen **Node** (Vite + plugin Cloudflare NO funciona bajo Bun).
-- `apps/scraper` — motor de scraping. **No corre en Cloudflare ni en contenedor**: necesita
-  Chromium **headful + IP residencial** (anti-bot). Corre en host con Node:
-  - `providers/` — abstracción `Provider` categorizada por tipo (energia/gas/agua) + registro.
-    Proveedores: Gases de Occidente (gas), Celsia (energia, autenticada), Acuavalle (agua),
-    AquaServicios (agua, bloqueado por reCAPTCHA v2). Ver `docs/scraper` en memoria.
-  - `server.ts` = disparador HTTP (`/run`, `/providers`); `index.ts` = worker de cola (`--once`).
-- `packages/shared` — dominio puro: tipos, schemas Zod, liquidación/dispersión, notificaciones (+ tests).
-- `supabase/` — `config.toml`, `migrations/` (5), `seed.sql`. Migraciones: `bun run db:status`.
-- `scripts/` — seed-users, seed-demo, migration-status, smoke-fase0.
-- `docs/` — ARQUITECTURA, DESARROLLO-LOCAL, WOMPI-INTEGRACION, NOTIFICACIONES.
-
-## Comandos
-
+## Cómo correr (resumen; detalle en docs/DESARROLLO-LOCAL.md)
 ```bash
-supabase start                              # DB/Auth local
+supabase start                 # DB/Auth local (Docker)
 bun install
-supabase migration up                       # aplicar migraciones
-bun run scripts/seed-users.ts               # usuarios admin/arrendador/arrendatario
-bun run scripts/seed-demo.ts                # propiedad + servicio + job
-docker compose up -d                        # web (Node) + Mailpit -> localhost:3000
-node --env-file=.env --experimental-strip-types apps/scraper/src/server.ts   # disparador scraper (headful)
-bun run db:status                           # migraciones aplicadas vs locales
-bun run --cwd apps/scraper test-provider <key> <id>   # probar un scraper
-bun run test                                # tests del dominio (packages/shared)
+supabase migration up          # aplica migraciones
+bun run scripts/seed-users.ts  # usuarios admin/arrendador/arrendatario (pass Arrienda2026!)
+bun run scripts/seed-demo.ts   # propiedad + servicio gas + job
+docker compose up -d           # web (Node) + Mailpit -> http://localhost:3000
+node --env-file=.env --experimental-strip-types apps/scraper/src/server.ts  # disparador scraper
+bun run db:status              # estado de migraciones (local o cloud via SUPABASE_DB_URL)
 ```
+**Envs (gitignored — recrear desde los `.example` + las llaves que imprime `supabase start`):**
+`.env` (raíz, scripts/scraper), `apps/web/.dev.vars` (web en host), `apps/web/.dev.vars.docker`
+(web en Docker; usa `host.docker.internal:55321`). Ver `docs/ESTADO.md`.
 
-## Convenciones y "gotchas"
+## Estado por módulo
+- **Fase 0** (auth, propiedades, contratos, liquidación canon+servicios, pago mock): ✅ funcional.
+- **Scraper** (providers categorizados): GdO/gas ✅ · Celsia/energía ✅ (vía "Estado de cuenta") ·
+  Acuavalle/agua ✅ · **AquaServicios/agua ⏸️ stand-by** (reCAPTCHA v2; ver LIMITACIONES.md).
+- **Notificaciones**: ✅ esquema + lógica + job `notify` (email Mailpit) + UI config (admin global + arrendador override).
+- **Design system + responsive**: ✅ (showcase en `/design`).
+- **Wompi**: gateway implementado (Payment Links + verificación webhook) + UI cableada;
+  **pendiente: llaves sandbox + webhook (Supabase Edge Function)**. Ver WOMPI-INTEGRACION.md.
 
-- **Dinero**: enteros en pesos. Lógica de comisión/dispersión SOLO en `@arrienda/shared`.
-- **Invariante**: `suma(dispersión) === total` (cubierto por test).
-- **RLS**: cliente usa anon key (RLS aplica); server functions/scraper usan service role (bypass).
-  Relaciones cruzadas en RLS se resuelven con funciones `SECURITY DEFINER` (evitan recursión).
-- **Runtimes**: la web corre con **Node** en Docker (no Bun); el scraper con **Node** (Playwright
-  falla bajo Bun). Bun solo instala/ejecuta tareas que no usan Playwright/Vite-CF.
-- **Docker + node_modules**: los `node_modules` del contenedor van en **volúmenes anónimos**
-  (compose) para no pisar los del host por el bind-mount.
-- **Env**: cliente = `VITE_*`; servidor local = `.dev.vars` (host) / `.dev.vars.docker` (contenedor,
-  usa `host.docker.internal`); prod = `wrangler secret`. Expuestas vía `process.env`.
-- **Scraper anti-bot**: reCAPTCHA invisible/Turnstile pasan headful+residencial; reCAPTCHA **v2
-  checkbox** NO (necesita 2captcha o captura manual). Celsia: leer "Estado de cuenta" (pagos tiene captcha).
-- **Enums duplicados**: `packages/shared/src/domain.ts` debe coincidir con los tipos SQL.
-- **`routeTree.gen.ts`**: generado por el plugin en `vite dev`/`build` (gitignored).
-- **Estilo**: Prettier (sin `;`, comillas simples). `bun run format`.
+## Gotchas (lecciones ganadas)
+- **Playwright = Node, no Bun** (Bun+Playwright falla al lanzar en Windows). **Web Vite = Node**, no Bun.
+- **Docker node_modules en volúmenes anónimos** (compose) para no pisar los del host por el bind-mount.
+- **RLS**: relaciones cruzadas vía funciones `SECURITY DEFINER` (evitan recursión). Cliente=anon (RLS aplica);
+  server fns/scraper=service role (bypass).
+- **Anti-bot por proveedor**: reCAPTCHA invisible/Turnstile pasan headful+residencial; reCAPTCHA **v2 checkbox NO**.
+- **Supabase local en puertos 553xx** (remapeados para convivir con otro proyecto Supabase). storage/analytics
+  desactivados en `config.toml` (no necesarios; analytics fallaba en Windows).
+- **Dinero**: enteros en pesos; lógica de comisión/dispersión SOLO en `@arrienda/shared` (invariante `suma(dispersión)===total`).
+- **Estilo**: Prettier (sin `;`, comillas simples). Iconos: lucide-react.
+
+## Git
+Remoto: `git@github-personal:AndresDFX/arrienda.git` (alias SSH `github-personal`). Rama `main`.

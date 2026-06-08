@@ -1,0 +1,15 @@
+# Plantilla de secretos de servidor para correr la WEB en Docker.
+# Copia a apps/web/.dev.vars.docker y completa con las llaves de `supabase start`.
+# Diferencia clave vs .dev.vars: SUPABASE_URL apunta a host.docker.internal (el worker
+# corre dentro del contenedor y alcanza el Supabase local del host por ese nombre).
+SUPABASE_URL="http://host.docker.internal:55321"
+SUPABASE_ANON_KEY="sb_publishable_...de-supabase-start..."
+SUPABASE_SERVICE_ROLE_KEY="sb_secret_...de-supabase-start..."
+PAYMENTS_PROVIDER="mock"
+COMMISSION_RATE="0.05"
+APP_BASE_URL="http://localhost:3000"
+
+# Wompi (cuando se active): PAYMENTS_PROVIDER="wompi" + estas llaves sandbox
+# WOMPI_PRIVATE_KEY="prv_test_..."
+# WOMPI_EVENTS_SECRET="test_events_..."
+# WOMPI_BASE_URL="https://sandbox.wompi.co/v1"
