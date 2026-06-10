@@ -48,7 +48,8 @@ no retiene fondos (orquestador de pagos). Documento de producto: `ARRIENDA+ Conc
   `scraper.yml.disabled` **desactivados** (no se sube a cloud aún; re-activar quitando `.disabled`).
 - `scripts/` — `seed-users.ts`, `seed-demo.ts` (gas GdO), `seed-celsia.ts` (energía Celsia con
   credenciales por servicio, leídas del `.env`), `migration-status.ts`, `smoke-fase0.ts`, `run-scraper.ps1`.
-- `docs/` — ESTADO, DESARROLLO-LOCAL, ARQUITECTURA, DESIGN-SYSTEM, NOTIFICACIONES, WOMPI-INTEGRACION, LIMITACIONES.
+- `docs/` — ESTADO, DESARROLLO-LOCAL, ARQUITECTURA, DESIGN-SYSTEM, NOTIFICACIONES, WOMPI-INTEGRACION,
+  PASARELAS-COLOMBIA (comparativa de pasarelas para el MVP), LIMITACIONES.
 
 ## Cómo correr (resumen; detalle en docs/DESARROLLO-LOCAL.md)
 ```bash
